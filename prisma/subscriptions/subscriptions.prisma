@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/subscriptions"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SUBSCRIPTIONS_DATABASE_URL")
+}
+
+enum SubscriptionPlan {
+  FREE
+  GOLD
+  PREMIUM
+}
+
+model Subscription {
+  id        Int              @id @default(autoincrement())
+
+  userId    Int
+  plan      SubscriptionPlan @default(FREE)
+
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/matches"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MATCHES_DATABASE_URL")
+}
+
+model Match {
+  id            Int      @id @default(autoincrement())
+
+  firstUserId   Int
+  secondUserId  Int
+
+  createdAt     DateTime @default(now())
+}
