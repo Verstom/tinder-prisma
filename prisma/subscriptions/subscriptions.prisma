@@ -1,24 +1,31 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../../generated/subscriptions"
+  output   = "../../src/generated/subscriptions"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("SUBSCRIPTIONS_DATABASE_URL")
+}
+
+model Subscription {
+  id        Int                @id @default(autoincrement())
+  userId    Int
+  plan      SubscriptionPlan
+  status    SubscriptionStatus @default(ACTIVE)
+  startedAt DateTime           @default(now())
+  endsAt    DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 }
 
 enum SubscriptionPlan {
   FREE
-  GOLD
   PREMIUM
+  GOLD
 }
 
-model Subscription {
-  id        Int              @id @default(autoincrement())
-
-  userId    Int
-  plan      SubscriptionPlan @default(FREE)
-
-  createdAt DateTime @default(now())
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
 }

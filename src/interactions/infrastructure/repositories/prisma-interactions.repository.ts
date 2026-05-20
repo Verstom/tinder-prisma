@@ -30,12 +30,18 @@ export class PrismaInteractionsRepository implements InteractionsRepository {
       update: {
         type: createInteractionDto.type,
       },
-      include: {
-        toUser: {
-          select: publicUserSelect,
-        },
-      },
     });
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: {
+        id: interaction.toUserId,
+      },
+      select: publicUserSelect,
+    });
+
+    if (!targetUser) {
+      throw new Error('Usuario destino no encontrado');
+    }
 
     return {
       id: interaction.id,
@@ -44,7 +50,7 @@ export class PrismaInteractionsRepository implements InteractionsRepository {
       type: interaction.type,
       createdAt: interaction.createdAt,
       updatedAt: interaction.updatedAt,
-      targetUser: normalizePublicUser(interaction.toUser),
+      targetUser: normalizePublicUser(targetUser),
     };
   }
 
@@ -59,15 +65,21 @@ export class PrismaInteractionsRepository implements InteractionsRepository {
           toUserId,
         },
       },
-      include: {
-        toUser: {
-          select: publicUserSelect,
-        },
-      },
     });
 
     if (!interaction) {
       return null;
+    }
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: {
+        id: interaction.toUserId,
+      },
+      select: publicUserSelect,
+    });
+
+    if (!targetUser) {
+      throw new Error('Usuario destino no encontrado');
     }
 
     return {
@@ -77,30 +89,50 @@ export class PrismaInteractionsRepository implements InteractionsRepository {
       type: interaction.type,
       createdAt: interaction.createdAt,
       updatedAt: interaction.updatedAt,
-      targetUser: normalizePublicUser(interaction.toUser),
+      targetUser: normalizePublicUser(targetUser),
     };
   }
 
   async findSentByUser(userId: number): Promise<InteractionRecord[]> {
     const interactions = await this.prisma.userInteraction.findMany({
-      where: { fromUserId: userId },
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        toUser: {
-          select: publicUserSelect,
-        },
+      where: {
+        fromUserId: userId,
+      },
+      orderBy: {
+        updatedAt: 'desc',
       },
     });
 
-    return interactions.map((interaction) => ({
-      id: interaction.id,
-      fromUserId: interaction.fromUserId,
-      toUserId: interaction.toUserId,
-      type: interaction.type,
-      createdAt: interaction.createdAt,
-      updatedAt: interaction.updatedAt,
-      targetUser: normalizePublicUser(interaction.toUser),
-    }));
+    const targetUserIds = interactions.map((interaction) => interaction.toUserId);
+
+    const targetUsers = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: targetUserIds,
+        },
+      },
+      select: publicUserSelect,
+    });
+
+    return interactions.map((interaction) => {
+      const targetUser = targetUsers.find(
+        (user) => user.id === interaction.toUserId,
+      );
+
+      if (!targetUser) {
+        throw new Error('Usuario destino no encontrado');
+      }
+
+      return {
+        id: interaction.id,
+        fromUserId: interaction.fromUserId,
+        toUserId: interaction.toUserId,
+        type: interaction.type,
+        createdAt: interaction.createdAt,
+        updatedAt: interaction.updatedAt,
+        targetUser: normalizePublicUser(targetUser),
+      };
+    });
   }
 
   async countSentTypeSince(

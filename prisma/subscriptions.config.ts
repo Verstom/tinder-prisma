@@ -1,5 +1,9 @@
-import { defineConfig } from "prisma/config";
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
   schema: "./subscriptions/subscriptions.prisma",
+  datasource: {
+    url: env("SUBSCRIPTIONS_DATABASE_URL"),
+  },
 });

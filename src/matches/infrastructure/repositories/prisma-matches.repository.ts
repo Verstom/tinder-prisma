@@ -10,7 +10,10 @@ import { MatchesRepository } from '../../domain/repositories/matches.repository'
 export class PrismaMatchesRepository implements MatchesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private buildMatchPair(userAId: number, userBId: number) {
+  private buildMatchPair(userAId: number, userBId: number): {
+    user1Id: number;
+    user2Id: number;
+  } {
     return {
       user1Id: Math.min(userAId, userBId),
       user2Id: Math.max(userAId, userBId),
@@ -26,20 +29,28 @@ export class PrismaMatchesRepository implements MatchesRepository {
       },
       create: pair,
       update: {},
-      include: {
-        firstUser: {
-          select: publicUserSelect,
-        },
-        secondUser: {
-          select: publicUserSelect,
+    });
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: [match.user1Id, match.user2Id],
         },
       },
+      select: publicUserSelect,
     });
+
+    const firstUser = users.find((user) => user.id === match.user1Id);
+    const secondUser = users.find((user) => user.id === match.user2Id);
+
+    if (!firstUser || !secondUser) {
+      throw new Error('Usuarios del match no encontrados');
+    }
 
     return {
       ...match,
-      firstUser: normalizePublicUser(match.firstUser),
-      secondUser: normalizePublicUser(match.secondUser),
+      firstUser: normalizePublicUser(firstUser),
+      secondUser: normalizePublicUser(secondUser),
     };
   }
 
@@ -48,20 +59,31 @@ export class PrismaMatchesRepository implements MatchesRepository {
       where: {
         OR: [{ user1Id: userId }, { user2Id: userId }],
       },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        firstUser: {
-          select: publicUserSelect,
-        },
-        secondUser: {
-          select: publicUserSelect,
-        },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
 
+    const userIds = matches.flatMap((match) => [match.user1Id, match.user2Id]);
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      select: publicUserSelect,
+    });
+
     return matches.map((match) => {
-      const matchedUser =
-        match.user1Id === userId ? match.secondUser : match.firstUser;
+      const matchedUserId =
+        match.user1Id === userId ? match.user2Id : match.user1Id;
+
+      const matchedUser = users.find((user) => user.id === matchedUserId);
+
+      if (!matchedUser) {
+        throw new Error('Usuario del match no encontrado');
+      }
 
       return {
         id: match.id,
@@ -80,24 +102,32 @@ export class PrismaMatchesRepository implements MatchesRepository {
         id: matchId,
         OR: [{ user1Id: userId }, { user2Id: userId }],
       },
-      include: {
-        firstUser: {
-          select: publicUserSelect,
-        },
-        secondUser: {
-          select: publicUserSelect,
-        },
-      },
     });
 
     if (!match) {
       return null;
     }
 
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: [match.user1Id, match.user2Id],
+        },
+      },
+      select: publicUserSelect,
+    });
+
+    const firstUser = users.find((user) => user.id === match.user1Id);
+    const secondUser = users.find((user) => user.id === match.user2Id);
+
+    if (!firstUser || !secondUser) {
+      throw new Error('Usuarios del match no encontrados');
+    }
+
     return {
       ...match,
-      firstUser: normalizePublicUser(match.firstUser),
-      secondUser: normalizePublicUser(match.secondUser),
+      firstUser: normalizePublicUser(firstUser),
+      secondUser: normalizePublicUser(secondUser),
     };
   }
 }
