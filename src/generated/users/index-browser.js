@@ -124,7 +124,13 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
   email: 'email',
-  password: 'password'
+  password: 'password',
+  plan: 'plan',
+  age: 'age',
+  bio: 'bio',
+  interests: 'interests',
+  location: 'location',
+  photos: 'photos'
 };
 
 exports.Prisma.RoleScalarFieldEnum = {
@@ -171,7 +177,11 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-
+exports.UserPlan = exports.$Enums.UserPlan = {
+  FREE: 'FREE',
+  PREMIUM: 'PREMIUM',
+  GOLD: 'GOLD'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',

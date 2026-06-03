@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { publicUserSelect } from '../../../shared/infrastructure/prisma/public-user.select';
 import { normalizePublicUser } from '../../../shared/utils/normalize-public-user';
@@ -10,17 +10,8 @@ import { MessagesRepository } from '../../domain/repositories/messages.repositor
 export class PrismaMessagesRepository implements MessagesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private get messageDelegate() {
-    return (this.prisma as PrismaService & {
-      message: {
-        create: PrismaService['$transaction'] extends never
-          ? never
-          : typeof this.prisma['match']['create'];
-        findMany: PrismaService['$transaction'] extends never
-          ? never
-          : typeof this.prisma['match']['findMany'];
-      };
-    }).message;
+  private get messageDelegate(): PrismaService['message'] {
+    return this.prisma.message;
   }
 
   async create(
@@ -33,12 +24,16 @@ export class PrismaMessagesRepository implements MessagesRepository {
         senderId,
         content: createMessageDto.content,
       },
-      include: {
-        sender: {
-          select: publicUserSelect,
-        },
-      },
     });
+
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
+      select: publicUserSelect,
+    });
+
+    if (!sender) {
+      throw new NotFoundException('Usuario emisor no encontrado');
+    }
 
     return {
       id: message.id,
@@ -46,7 +41,7 @@ export class PrismaMessagesRepository implements MessagesRepository {
       senderId: message.senderId,
       content: message.content,
       createdAt: message.createdAt,
-      sender: normalizePublicUser(message.sender),
+      sender: normalizePublicUser(sender),
     };
   }
 
@@ -54,20 +49,38 @@ export class PrismaMessagesRepository implements MessagesRepository {
     const messages = await this.messageDelegate.findMany({
       where: { matchId },
       orderBy: { createdAt: 'asc' },
-      include: {
-        sender: {
-          select: publicUserSelect,
-        },
-      },
     });
 
-    return messages.map((message) => ({
-      id: message.id,
-      matchId: message.matchId,
-      senderId: message.senderId,
-      content: message.content,
-      createdAt: message.createdAt,
-      sender: normalizePublicUser(message.sender),
-    }));
+    const senderIds = [...new Set(messages.map((message) => message.senderId))];
+
+    const senders = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: senderIds,
+        },
+      },
+      select: publicUserSelect,
+    });
+
+    const senderMap = new Map(
+      senders.map((sender) => [sender.id, normalizePublicUser(sender)]),
+    );
+
+    return messages.map((message) => {
+      const sender = senderMap.get(message.senderId);
+
+      if (!sender) {
+        throw new NotFoundException('Usuario emisor no encontrado');
+      }
+
+      return {
+        id: message.id,
+        matchId: message.matchId,
+        senderId: message.senderId,
+        content: message.content,
+        createdAt: message.createdAt,
+        sender,
+      };
+    });
   }
 }

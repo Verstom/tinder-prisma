@@ -7,11 +7,24 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserPlan {
+  FREE
+  PREMIUM
+  GOLD
+}
+
 model User {
-  id       Int    @id @default(autoincrement())
+  id       Int      @id @default(autoincrement())
   name     String
-  email    String @unique
+  email    String   @unique
   password String
+
+  plan      UserPlan @default(FREE)
+  age       Int?
+  bio       String?
+  interests String[] @default([])
+  location  String?
+  photos    String[] @default([])
 
   roles UserRole[]
 }
