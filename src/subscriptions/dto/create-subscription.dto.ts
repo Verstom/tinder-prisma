@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class UpdateSubscriptionDto {
+export class CreateSubscriptionDto {
   @IsString()
   @IsNotEmpty()
   planName!: string;

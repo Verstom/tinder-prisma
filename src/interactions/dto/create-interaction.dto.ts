@@ -12,7 +12,11 @@ export type InteractionTypeDto =
 export class CreateInteractionDto {
   @IsInt()
   @IsNotEmpty()
-  targetUserId!: number;
+  fromUserId!: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  toUserId!: number;
 
   @IsEnum(InteractionTypeDto)
   @IsNotEmpty()

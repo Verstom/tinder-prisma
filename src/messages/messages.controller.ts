@@ -1,30 +1,54 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
-import { FindMatchMessagesUseCase } from './application/use-cases/find-match-messages.use-case';
-import { SendMessageUseCase } from './application/use-cases/send-message.use-case';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
+
+type UpdateMessageDto = Partial<CreateMessageDto>;
 
 @Controller('messages')
 export class MessagesController {
-  constructor(
-    private readonly sendMessageUseCase: SendMessageUseCase,
-    private readonly findMatchMessagesUseCase: FindMatchMessagesUseCase,
-  ) {}
+  constructor(private readonly messagesService: MessagesService) {}
 
   @Post()
-  create(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() createMessageDto: CreateMessageDto,
-  ) {
-    return this.sendMessageUseCase.execute(user.id, createMessageDto);
+  create(@Body() dto: CreateMessageDto) {
+    return this.messagesService.create(dto);
   }
 
-  @Get(':matchId')
-  findByMatch(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('matchId', ParseIntPipe) matchId: number,
-  ) {
-    return this.findMatchMessagesUseCase.execute(user.id, matchId);
+  @Get()
+  findAll() {
+    return this.messagesService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.messagesService.findOne(id);
+  }
+
+  @Get('match/:matchId')
+  findByMatch(@Param('matchId', ParseIntPipe) matchId: number) {
+    return this.messagesService.findByMatch(matchId);
+  }
+
+  @Get('user/:userId')
+  findByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.messagesService.findByUser(userId);
+  }
+
+  @Patch(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMessageDto) {
+    return this.messagesService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.messagesService.remove(id);
   }
 }

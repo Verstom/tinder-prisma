@@ -1,39 +1,34 @@
-import { Body, Controller, Get, Patch } from '@nestjs/common';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
-import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
-import { FindMySubscriptionUseCase } from './application/use-cases/find-my-subscription.use-case';
-import { ListSubscriptionPlansUseCase } from './application/use-cases/list-subscription-plans.use-case';
-import { UpdateMySubscriptionPlanUseCase } from './application/use-cases/update-my-subscription-plan.use-case';
-import { UpdateSubscriptionPlanDto } from './dto/update-subscription-plan.dto';
+import { Body, Controller, Get, Post, Patch, Delete, Param, ParseIntPipe } from '@nestjs/common';
+import { SubscriptionsService } from './subscriptions.service';
+import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { UpdateSubscriptionDto } from './dto/update-subscription-plan.dto';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
-  constructor(
-    private readonly listSubscriptionPlansUseCase: ListSubscriptionPlansUseCase,
-    private readonly findMySubscriptionUseCase: FindMySubscriptionUseCase,
-    private readonly updateMySubscriptionPlanUseCase: UpdateMySubscriptionPlanUseCase,
-  ) {}
+  constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
-  @Public()
-  @Get('plans')
-  findPlans() {
-    return this.listSubscriptionPlansUseCase.execute();
+  @Post()
+  create(@Body() dto: CreateSubscriptionDto) {
+    return this.subscriptionsService.create(dto);
   }
 
-  @Get('me')
-  findMine(@CurrentUser() user: AuthenticatedUser) {
-    return this.findMySubscriptionUseCase.execute(user.id);
+  @Patch(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSubscriptionDto) {
+    return this.subscriptionsService.update(id, dto);
   }
 
-  @Patch('me')
-  updateMine(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() updateSubscriptionPlanDto: UpdateSubscriptionPlanDto,
-  ) {
-    return this.updateMySubscriptionPlanUseCase.execute(
-      user.id,
-      updateSubscriptionPlanDto,
-    );
+  @Get()
+  findAll() {
+    return this.subscriptionsService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.subscriptionsService.findOne(id);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.subscriptionsService.remove(id);
   }
 }

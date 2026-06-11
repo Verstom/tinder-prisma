@@ -1,44 +1,44 @@
-import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
+import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
-import { CreateUserUseCase } from './application/use-cases/create-user.use-case';
-import { FindAllUsersUseCase } from './application/use-cases/find-all-users.use-case';
-import { FindPublicUserByIdUseCase } from './application/use-cases/find-public-user-by-id.use-case';
-import { UpdateUserProfileUseCase } from './application/use-cases/update-user-profile.use-case';
+
+type UpdateUserDto = Partial<CreateUserDto>;
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly createUserUseCase: CreateUserUseCase,
-    private readonly findAllUsersUseCase: FindAllUsersUseCase,
-    private readonly findPublicUserByIdUseCase: FindPublicUserByIdUseCase,
-    private readonly updateUserProfileUseCase: UpdateUserProfileUseCase,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
-  @Public()
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.createUserUseCase.execute(createUserDto);
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.create(dto);
   }
 
   @Get()
   findAll() {
-    return this.findAllUsersUseCase.execute();
+    return this.usersService.findAll();
   }
 
-  @Get('me')
-  getMe(@CurrentUser() user: AuthenticatedUser) {
-    return this.findPublicUserByIdUseCase.execute(user.id);
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOne(id);
   }
 
-  @Patch('me')
-  updateMe(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() updateUserProfileDto: UpdateUserProfileDto,
-  ) {
-    return this.updateUserProfileUseCase.execute(user.id, updateUserProfileDto);
+  @Put(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
+    return this.usersService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.remove(id);
   }
 }

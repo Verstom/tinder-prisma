@@ -1,29 +1,11 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../prisma/prisma.module';
+import { MatchesService } from './matches.service';
 import { MatchesController } from './matches.controller';
-import { EnsureMatchUseCase } from './application/use-cases/ensure-match.use-case';
-import { FindAccessibleMatchByIdUseCase } from './application/use-cases/find-accessible-match-by-id.use-case';
-import { FindMyMatchesUseCase } from './application/use-cases/find-my-matches.use-case';
-import { MatchesRepository } from './domain/repositories/matches.repository';
-import { PrismaMatchesRepository } from './infrastructure/repositories/prisma-matches.repository';
+import { MatchesPrismaService } from '../prisma/matches-prisma.service';
 
 @Module({
-  imports: [PrismaModule],
+  providers: [MatchesService, MatchesPrismaService],
   controllers: [MatchesController],
-  providers: [
-    EnsureMatchUseCase,
-    FindAccessibleMatchByIdUseCase,
-    FindMyMatchesUseCase,
-    PrismaMatchesRepository,
-    {
-      provide: MatchesRepository,
-      useExisting: PrismaMatchesRepository,
-    },
-  ],
-  exports: [
-    EnsureMatchUseCase,
-    FindAccessibleMatchByIdUseCase,
-    MatchesRepository,
-  ],
+  exports: [MatchesService],
 })
 export class MatchesModule {}

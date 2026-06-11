@@ -1,14 +1,43 @@
-import { Controller, Get } from '@nestjs/common';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
-import { FindMyMatchesUseCase } from './application/use-cases/find-my-matches.use-case';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
+import { MatchesService } from './matches.service';
 
 @Controller('matches')
 export class MatchesController {
-  constructor(private readonly findMyMatchesUseCase: FindMyMatchesUseCase) {}
+  constructor(private readonly matchesService: MatchesService) {}
 
   @Get()
-  findMine(@CurrentUser() user: AuthenticatedUser) {
-    return this.findMyMatchesUseCase.execute(user.id);
+  findAll() {
+    return this.matchesService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.matchesService.findOne(id);
+  }
+
+  @Get('user/:userId')
+  findByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.matchesService.findByUser(userId);
+  }
+
+  @Post()
+  create(
+    @Body('user1Id', ParseIntPipe) user1Id: number,
+    @Body('user2Id', ParseIntPipe) user2Id: number,
+  ) {
+    return this.matchesService.create(user1Id, user2Id);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.matchesService.remove(id);
   }
 }

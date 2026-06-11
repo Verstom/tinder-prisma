@@ -5,6 +5,10 @@ export class CreateMessageDto {
   @IsNotEmpty()
   matchId!: number;
 
+  @IsInt()
+  @IsNotEmpty()
+  senderId!: number;
+
   @IsString()
   @IsNotEmpty()
   @MinLength(1)
