@@ -39,12 +39,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.6.0
- * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 Prisma.prismaVersion = {
-  client: "7.6.0",
-  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -167,8 +167,8 @@ exports.Prisma.ModelName = {
  */
 const config = {
   "previewFeatures": [],
-  "clientVersion": "7.6.0",
-  "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
+  "clientVersion": "7.8.0",
+  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
   "activeProvider": "postgresql",
   "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../../src/generated/users\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum UserPlan {\n  FREE\n  PREMIUM\n  GOLD\n}\n\nmodel User {\n  id       Int    @id @default(autoincrement())\n  name     String\n  email    String @unique\n  password String\n\n  plan      UserPlan @default(FREE)\n  age       Int?\n  bio       String?\n  interests String[] @default([])\n  location  String?\n  photos    String[] @default([])\n\n  roles UserRole[]\n}\n\nmodel Role {\n  id          Int              @id @default(autoincrement())\n  name        String           @unique\n  description String?\n  users       UserRole[]\n  permissions RolePermission[]\n  createdAt   DateTime         @default(now())\n  updatedAt   DateTime         @updatedAt\n}\n\nmodel Permission {\n  id          Int              @id @default(autoincrement())\n  name        String           @unique\n  resource    String\n  action      String\n  description String?\n  roles       RolePermission[]\n  createdAt   DateTime         @default(now())\n  updatedAt   DateTime         @updatedAt\n\n  @@unique([resource, action])\n}\n\nmodel UserRole {\n  userId     Int\n  roleId     Int\n  assignedAt DateTime @default(now())\n\n  user User @relation(fields: [userId], references: [id], onDelete: Cascade)\n  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)\n\n  @@id([userId, roleId])\n  @@map(\"user_roles\")\n}\n\nmodel RolePermission {\n  roleId       Int\n  permissionId Int\n  assignedAt   DateTime @default(now())\n\n  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)\n  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)\n\n  @@id([roleId, permissionId])\n  @@map(\"role_permissions\")\n}\n"
 }

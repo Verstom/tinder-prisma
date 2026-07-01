@@ -7,9 +7,10 @@
     "assets": [
       {
         "include": "generated/**/*",
-        "outDir": "dist/src"
+        "outDir": "dist"
       }
     ],
-    "watchAssets": true
+    "watchAssets": true,
+    "tsConfigPath": "tsconfig.app.json"
   }
 }
