@@ -1,11 +1,20 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../src/generated/messages"
+  provider        = "prisma-client-js"
+  output          = "../../src/generated/messages"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
 }
+
+// ===================================================================
+// MESSAGES SERVICE SCHEMA
+// Base de datos: messages_db  |  Puerto: 3004
+// Solo usuarios con un Match activo pueden enviarse mensajes.
+// matchId referencia la BD matches_db (sin FK por ser microservicios).
+// senderId referencia la BD users_db  (sin FK por ser microservicios).
+// ===================================================================
 
 model Message {
   id        Int      @id @default(autoincrement())
@@ -13,4 +22,7 @@ model Message {
   senderId  Int
   content   String
   createdAt DateTime @default(now())
+
+  @@index([matchId])
+  @@index([senderId])
 }

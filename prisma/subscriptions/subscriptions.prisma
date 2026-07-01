@@ -1,22 +1,19 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../src/generated/subscriptions"
+  provider        = "prisma-client-js"
+  output          = "../../src/generated/subscriptions"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model Subscription {
-  id        Int                @id @default(autoincrement())
-  userId    Int
-  plan      SubscriptionPlan
-  status    SubscriptionStatus @default(ACTIVE)
-  startedAt DateTime           @default(now())
-  endsAt    DateTime?
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-}
+// ===================================================================
+// SUBSCRIPTIONS SERVICE SCHEMA
+// Base de datos: subscriptions_db  |  Puerto: 3005
+// Gestiona planes de suscripción de usuarios: FREE, GOLD, PREMIUM.
+// userId referencia la BD users_db (sin FK por ser microservicios).
+// ===================================================================
 
 enum SubscriptionPlan {
   FREE
@@ -28,4 +25,18 @@ enum SubscriptionStatus {
   ACTIVE
   CANCELLED
   EXPIRED
+}
+
+model Subscription {
+  id        Int                @id @default(autoincrement())
+  userId    Int
+  plan      SubscriptionPlan
+  status    SubscriptionStatus @default(ACTIVE)
+  startedAt DateTime           @default(now())
+  endsAt    DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }

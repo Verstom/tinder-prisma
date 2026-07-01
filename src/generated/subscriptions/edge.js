@@ -39,12 +39,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.6.0
- * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 Prisma.prismaVersion = {
-  client: "7.6.0",
-  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -131,11 +131,13 @@ exports.Prisma.ModelName = {
  * Create the Client
  */
 const config = {
-  "previewFeatures": [],
-  "clientVersion": "7.6.0",
-  "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
+  "previewFeatures": [
+    "driverAdapters"
+  ],
+  "clientVersion": "7.8.0",
+  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
   "activeProvider": "postgresql",
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../../src/generated/subscriptions\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel Subscription {\n  id        Int                @id @default(autoincrement())\n  userId    Int\n  plan      SubscriptionPlan\n  status    SubscriptionStatus @default(ACTIVE)\n  startedAt DateTime           @default(now())\n  endsAt    DateTime?\n  createdAt DateTime           @default(now())\n  updatedAt DateTime           @updatedAt\n}\n\nenum SubscriptionPlan {\n  FREE\n  PREMIUM\n  GOLD\n}\n\nenum SubscriptionStatus {\n  ACTIVE\n  CANCELLED\n  EXPIRED\n}\n"
+  "inlineSchema": "generator client {\n  provider        = \"prisma-client-js\"\n  output          = \"../../src/generated/subscriptions\"\n  previewFeatures = [\"driverAdapters\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\n// ===================================================================\n// SUBSCRIPTIONS SERVICE SCHEMA\n// Base de datos: subscriptions_db  |  Puerto: 3005\n// Gestiona planes de suscripción de usuarios: FREE, GOLD, PREMIUM.\n// userId referencia la BD users_db (sin FK por ser microservicios).\n// ===================================================================\n\nenum SubscriptionPlan {\n  FREE\n  PREMIUM\n  GOLD\n}\n\nenum SubscriptionStatus {\n  ACTIVE\n  CANCELLED\n  EXPIRED\n}\n\nmodel Subscription {\n  id        Int                @id @default(autoincrement())\n  userId    Int\n  plan      SubscriptionPlan\n  status    SubscriptionStatus @default(ACTIVE)\n  startedAt DateTime           @default(now())\n  endsAt    DateTime?\n  createdAt DateTime           @default(now())\n  updatedAt DateTime           @updatedAt\n\n  @@index([userId])\n  @@index([status])\n}\n"
 }
 
 config.runtimeDataModel = JSON.parse("{\"models\":{\"Subscription\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"plan\",\"kind\":\"enum\",\"type\":\"SubscriptionPlan\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"SubscriptionStatus\"},{\"name\":\"startedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"endsAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")

@@ -1,11 +1,18 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../src/generated/matches"
+  provider        = "prisma-client-js"
+  output          = "../../src/generated/matches"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
 }
+
+// ===================================================================
+// MATCHES SERVICE SCHEMA
+// Base de datos: matches_db  |  Puerto: 3003
+// Se crea un Match cuando dos usuarios se dan LIKE mutuamente.
+// ===================================================================
 
 model Match {
   id        Int      @id @default(autoincrement())
@@ -13,5 +20,8 @@ model Match {
   user2Id   Int
   createdAt DateTime @default(now())
 
+  // No puede existir el mismo match dos veces
   @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
 }

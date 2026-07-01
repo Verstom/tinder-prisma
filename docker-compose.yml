@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: tinder_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  users-service:
+    build:
+      context: .
+      dockerfile: ./users-service/Dockerfile
+    container_name: users_service
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/users_db
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  interactions-service:
+    build:
+      context: .
+      dockerfile: ./interactions-service/Dockerfile
+    container_name: interactions_service
+    ports:
+      - "3002:3002"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/interactions_db
+      PORT: 3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  matches-service:
+    build:
+      context: .
+      dockerfile: ./matches-service/Dockerfile
+    container_name: matches_service
+    ports:
+      - "3003:3003"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/matches_db
+      PORT: 3003
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  messages-service:
+    build:
+      context: .
+      dockerfile: ./messages-service/Dockerfile
+    container_name: messages_service
+    ports:
+      - "3004:3004"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/messages_db
+      PORT: 3004
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  subscriptions-service:
+    build:
+      context: .
+      dockerfile: ./subscriptions-service/Dockerfile
+    container_name: subscriptions_service
+    ports:
+      - "3005:3005"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subscriptions_db
+      PORT: 3005
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  tinder-gateway:
+    build:
+      context: .
+      dockerfile: ./tinder/Dockerfile
+    container_name: tinder_gateway
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+      USERS_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/users_db
+      INTERACTIONS_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/interactions_db
+      MATCHES_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/matches_db
+      MESSAGES_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/messages_db
+      SUBSCRIPTIONS_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subscriptions_db
+      JWT_SECRET: super-secret-change-this
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      users-service:
+        condition: service_started
+      interactions-service:
+        condition: service_started
+      matches-service:
+        condition: service_started
+      messages-service:
+        condition: service_started
+      subscriptions-service:
+        condition: service_started
+
+volumes:
+  postgres_data:

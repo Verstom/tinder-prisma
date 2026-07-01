@@ -39,12 +39,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.6.0
- * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 Prisma.prismaVersion = {
-  client: "7.6.0",
-  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -118,11 +118,13 @@ exports.Prisma.ModelName = {
  * Create the Client
  */
 const config = {
-  "previewFeatures": [],
-  "clientVersion": "7.6.0",
-  "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
+  "previewFeatures": [
+    "driverAdapters"
+  ],
+  "clientVersion": "7.8.0",
+  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
   "activeProvider": "postgresql",
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../../src/generated/interactions\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel UserInteraction {\n  id         Int             @id @default(autoincrement())\n  fromUserId Int\n  toUserId   Int\n  type       InteractionType\n  createdAt  DateTime        @default(now())\n  updatedAt  DateTime        @updatedAt\n\n  @@unique([fromUserId, toUserId])\n}\n\nenum InteractionType {\n  LIKE\n  DISLIKE\n  SUPERLIKE\n}\n"
+  "inlineSchema": "generator client {\n  provider        = \"prisma-client-js\"\n  output          = \"../../src/generated/interactions\"\n  previewFeatures = [\"driverAdapters\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\n// ===================================================================\n// INTERACTIONS SERVICE SCHEMA\n// Base de datos: interactions_db  |  Puerto: 3002\n// Registra likes, dislikes y superlikes entre usuarios.\n// ===================================================================\n\nenum InteractionType {\n  LIKE\n  DISLIKE\n  SUPERLIKE\n}\n\nmodel UserInteraction {\n  id         Int             @id @default(autoincrement())\n  fromUserId Int\n  toUserId   Int\n  type       InteractionType\n  createdAt  DateTime        @default(now())\n  updatedAt  DateTime        @updatedAt\n\n  // Un usuario solo puede interactuar UNA VEZ con otro\n  @@unique([fromUserId, toUserId])\n  @@index([fromUserId])\n  @@index([toUserId])\n}\n"
 }
 
 config.runtimeDataModel = JSON.parse("{\"models\":{\"UserInteraction\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"fromUserId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"toUserId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"type\",\"kind\":\"enum\",\"type\":\"InteractionType\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")

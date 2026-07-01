@@ -39,12 +39,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.6.0
- * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 Prisma.prismaVersion = {
-  client: "7.6.0",
-  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -112,11 +112,13 @@ exports.Prisma.ModelName = {
  * Create the Client
  */
 const config = {
-  "previewFeatures": [],
-  "clientVersion": "7.6.0",
-  "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
+  "previewFeatures": [
+    "driverAdapters"
+  ],
+  "clientVersion": "7.8.0",
+  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
   "activeProvider": "postgresql",
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../../src/generated/matches\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel Match {\n  id        Int      @id @default(autoincrement())\n  user1Id   Int\n  user2Id   Int\n  createdAt DateTime @default(now())\n\n  @@unique([user1Id, user2Id])\n}\n"
+  "inlineSchema": "generator client {\n  provider        = \"prisma-client-js\"\n  output          = \"../../src/generated/matches\"\n  previewFeatures = [\"driverAdapters\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\n// ===================================================================\n// MATCHES SERVICE SCHEMA\n// Base de datos: matches_db  |  Puerto: 3003\n// Se crea un Match cuando dos usuarios se dan LIKE mutuamente.\n// ===================================================================\n\nmodel Match {\n  id        Int      @id @default(autoincrement())\n  user1Id   Int\n  user2Id   Int\n  createdAt DateTime @default(now())\n\n  // No puede existir el mismo match dos veces\n  @@unique([user1Id, user2Id])\n  @@index([user1Id])\n  @@index([user2Id])\n}\n"
 }
 
 config.runtimeDataModel = JSON.parse("{\"models\":{\"Match\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user1Id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user2Id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")

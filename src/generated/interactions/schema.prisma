@@ -1,10 +1,23 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../src/generated/interactions"
+  provider        = "prisma-client-js"
+  output          = "../../src/generated/interactions"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ===================================================================
+// INTERACTIONS SERVICE SCHEMA
+// Base de datos: interactions_db  |  Puerto: 3002
+// Registra likes, dislikes y superlikes entre usuarios.
+// ===================================================================
+
+enum InteractionType {
+  LIKE
+  DISLIKE
+  SUPERLIKE
 }
 
 model UserInteraction {
@@ -15,11 +28,8 @@ model UserInteraction {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
+  // Un usuario solo puede interactuar UNA VEZ con otro
   @@unique([fromUserId, toUserId])
-}
-
-enum InteractionType {
-  LIKE
-  DISLIKE
-  SUPERLIKE
+  @@index([fromUserId])
+  @@index([toUserId])
 }

@@ -1,0 +1,208 @@
+// ═══════════════════════════════════════════════════════════════════════
+//  PRISMA SCHEMA PRINCIPAL - REFERENCIA COMPLETA
+//  Proyecto: Tinder Microservicios
+//
+//  ⚠️  ESTE ARCHIVO ES SOLO DE REFERENCIA / DOCUMENTACIÓN
+//  ⚠️  No se usa para generar clientes ni migrations.
+//  ⚠️  Cada microservicio usa su propio esquema en prisma/<servicio>/
+//
+//  ARQUITECTURA DE BASES DE DATOS:
+//  ┌─────────────────┬─────────────────────────────────────────────────┐
+//  │  Microservicio  │  Base de Datos         │  Puerto  │  Schema     │
+//  ├─────────────────┼────────────────────────┼──────────┼─────────────┤
+//  │  users-service  │  users_db              │  3001    │  users/     │
+//  │  interactions   │  interactions_db        │  3002    │  interacti  │
+//  │  matches        │  matches_db            │  3003    │  matches/   │
+//  │  messages       │  messages_db           │  3004    │  messages/  │
+//  │  subscriptions  │  subscriptions_db      │  3005    │  subscript  │
+//  └─────────────────┴────────────────────────┴──────────┴─────────────┘
+//
+//  Variables de entorno necesarias (tinder/.env):
+//    USERS_DATABASE_URL          = postgresql://user:pass@host:5432/users_db
+//    INTERACTIONS_DATABASE_URL   = postgresql://user:pass@host:5432/interactions_db
+//    MATCHES_DATABASE_URL        = postgresql://user:pass@host:5432/matches_db
+//    MESSAGES_DATABASE_URL       = postgresql://user:pass@host:5432/messages_db
+//    SUBSCRIPTIONS_DATABASE_URL  = postgresql://user:pass@host:5432/subscriptions_db
+//
+//  Comandos de migración (ejecutar desde la raíz del proyecto):
+//    npx prisma migrate dev --config users.config.ts --name init
+//    npx prisma migrate dev --config interactions.config.ts --name init
+//    npx prisma migrate dev --config matches.config.ts --name init
+//    npx prisma migrate dev --config messages.config.ts --name init
+//    npx prisma migrate dev --config subscriptions.config.ts --name init
+//
+//  Generar clientes Prisma:
+//    npx prisma generate --config users.config.ts
+//    npx prisma generate --config interactions.config.ts
+//    npx prisma generate --config matches.config.ts
+//    npx prisma generate --config messages.config.ts
+//    npx prisma generate --config subscriptions.config.ts
+// ═══════════════════════════════════════════════════════════════════════
+
+// ───────────────────────────────────────────────────────────────────────
+// DATABASE 1: users_db  →  users-service (Puerto 3001)
+// Schema real: prisma/users/users.prisma
+// ───────────────────────────────────────────────────────────────────────
+
+// generator users_client {
+//   provider        = "prisma-client-js"
+//   output          = "../../src/generated/users"
+//   previewFeatures = ["driverAdapters"]
+// }
+// datasource users_db {
+//   provider = "postgresql"
+//   url      = env("USERS_DATABASE_URL")
+// }
+
+// model User {
+//   id        Int      @id @default(autoincrement())
+//   name      String
+//   email     String   @unique
+//   password  String                    // bcrypt hash
+//   plan      UserPlan @default(FREE)
+//   age       Int?
+//   bio       String?
+//   interests String[] @default([])
+//   location  String?
+//   photos    String[] @default([])
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   roles     UserRole[]
+// }
+// enum UserPlan { FREE  PREMIUM  GOLD }
+
+// model Role {
+//   id          Int              @id @default(autoincrement())
+//   name        String           @unique
+//   description String?
+//   users       UserRole[]
+//   permissions RolePermission[]
+//   createdAt   DateTime         @default(now())
+//   updatedAt   DateTime         @updatedAt
+// }
+
+// model Permission {
+//   id          Int              @id @default(autoincrement())
+//   name        String           @unique
+//   resource    String
+//   action      String
+//   description String?
+//   roles       RolePermission[]
+//   createdAt   DateTime         @default(now())
+//   updatedAt   DateTime         @updatedAt
+//   @@unique([resource, action])
+// }
+
+// model UserRole {
+//   userId     Int
+//   roleId     Int
+//   assignedAt DateTime @default(now())
+//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+//   @@id([userId, roleId])
+//   @@map("user_roles")
+// }
+
+// model RolePermission {
+//   roleId       Int
+//   permissionId Int
+//   assignedAt   DateTime @default(now())
+//   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+//   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+//   @@id([roleId, permissionId])
+//   @@map("role_permissions")
+// }
+
+
+// ───────────────────────────────────────────────────────────────────────
+// DATABASE 2: interactions_db  →  interactions-service (Puerto 3002)
+// Schema real: prisma/interactions/interactions.prisma
+// ───────────────────────────────────────────────────────────────────────
+
+// datasource interactions_db {
+//   provider = "postgresql"
+//   url      = env("INTERACTIONS_DATABASE_URL")
+// }
+
+// model UserInteraction {
+//   id         Int             @id @default(autoincrement())
+//   fromUserId Int                           // FK lógica → users_db.User.id
+//   toUserId   Int                           // FK lógica → users_db.User.id
+//   type       InteractionType
+//   createdAt  DateTime        @default(now())
+//   updatedAt  DateTime        @updatedAt
+//   @@unique([fromUserId, toUserId])
+//   @@index([fromUserId])
+//   @@index([toUserId])
+// }
+// enum InteractionType { LIKE  DISLIKE  SUPERLIKE }
+
+
+// ───────────────────────────────────────────────────────────────────────
+// DATABASE 3: matches_db  →  matches-service (Puerto 3003)
+// Schema real: prisma/matches/matches.prisma
+// Se crea un Match cuando User A da LIKE a B y B da LIKE a A.
+// ───────────────────────────────────────────────────────────────────────
+
+// datasource matches_db {
+//   provider = "postgresql"
+//   url      = env("MATCHES_DATABASE_URL")
+// }
+
+// model Match {
+//   id        Int      @id @default(autoincrement())
+//   user1Id   Int                             // FK lógica → users_db.User.id
+//   user2Id   Int                             // FK lógica → users_db.User.id
+//   createdAt DateTime @default(now())
+//   @@unique([user1Id, user2Id])
+//   @@index([user1Id])
+//   @@index([user2Id])
+// }
+
+
+// ───────────────────────────────────────────────────────────────────────
+// DATABASE 4: messages_db  →  messages-service (Puerto 3004)
+// Schema real: prisma/messages/messages.prisma
+// Solo usuarios con match activo pueden mensajearse.
+// ───────────────────────────────────────────────────────────────────────
+
+// datasource messages_db {
+//   provider = "postgresql"
+//   url      = env("MESSAGES_DATABASE_URL")
+// }
+
+// model Message {
+//   id        Int      @id @default(autoincrement())
+//   matchId   Int                               // FK lógica → matches_db.Match.id
+//   senderId  Int                               // FK lógica → users_db.User.id
+//   content   String
+//   createdAt DateTime @default(now())
+//   @@index([matchId])
+//   @@index([senderId])
+// }
+
+
+// ───────────────────────────────────────────────────────────────────────
+// DATABASE 5: subscriptions_db  →  subscriptions-service (Puerto 3005)
+// Schema real: prisma/subscriptions/subscriptions.prisma
+// ───────────────────────────────────────────────────────────────────────
+
+// datasource subscriptions_db {
+//   provider = "postgresql"
+//   url      = env("SUBSCRIPTIONS_DATABASE_URL")
+// }
+
+// model Subscription {
+//   id        Int                @id @default(autoincrement())
+//   userId    Int                              // FK lógica → users_db.User.id
+//   plan      SubscriptionPlan
+//   status    SubscriptionStatus @default(ACTIVE)
+//   startedAt DateTime           @default(now())
+//   endsAt    DateTime?
+//   createdAt DateTime           @default(now())
+//   updatedAt DateTime           @updatedAt
+//   @@index([userId])
+//   @@index([status])
+// }
+// enum SubscriptionPlan   { FREE  PREMIUM  GOLD }
+// enum SubscriptionStatus { ACTIVE  CANCELLED  EXPIRED }
